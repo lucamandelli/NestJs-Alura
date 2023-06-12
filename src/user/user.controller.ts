@@ -1,33 +1,33 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { UserRepository } from './user.repository';
-
-type User = {
-  name: string;
-  age: number;
-  email: string;
-};
+import { CreateUserDTO } from './dto/CreateUser.dto';
+import { UserEntity } from './user.entity';
+import { v4 as uuid } from "uuid";
+import { ListUsersDTO } from './dto/ListUser.dto';
 
 @Controller('/users')
 export class UserController {
   constructor(private readonly userRepository: UserRepository) { }
 
   @Post()
-  async createUser(@Body() userData: User) {
-    await this.userRepository.saveUser(userData);
+  async createUser(@Body() userData: CreateUserDTO) {
+    const userEntity = new UserEntity();
+    userEntity.id = uuid();
+    userEntity.name = userData.name;
+    userEntity.email = userData.email;
+    userEntity.password = userData.password;
+    await this.userRepository.saveUser(userEntity);
     return {
-      data: userData,
+      userId: new ListUsersDTO(userEntity.id, userEntity.name),
       message: 'User created successfully',
-      status: 201,
     };
   }
 
   @Get()
   async listUsers() {
-    const users = await this.userRepository.getUsers();
-    return {
-      data: users,
-      message: 'Users retrieved successfully',
-      status: 200,
-    };
+    const savedUsers = await this.userRepository.getUsers();
+    const listUsers = savedUsers.map(user => new ListUsersDTO(user.id, user.name));
+
+    return listUsers;
   }
 }

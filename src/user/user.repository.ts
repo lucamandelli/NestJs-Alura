@@ -1,19 +1,24 @@
 import { Injectable } from "@nestjs/common";
-
-type User = {
-  name: string;
-  age: number;
-  email: string;
-};
+import { UserEntity } from "./user.entity";
 
 @Injectable()
 export class UserRepository {
-  private users = [];
+  private users: UserEntity[] = [];
 
-  async saveUser(user: User) {
-    this.users.push(user);
+  async saveUser(newUser: UserEntity) {
+    this.users.push(newUser);
   }
   async getUsers() {
     return this.users;
+  }
+
+  async IsEmailUnique(email: string) {
+    const possibleUser = this.users.find(
+      user => user.email === email
+    );
+    
+    const isUnique = possibleUser === undefined;
+
+    return isUnique
   }
 }
